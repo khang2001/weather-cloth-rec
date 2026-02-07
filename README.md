@@ -1,28 +1,24 @@
 # Weather-Based Clothing Recommendation System
 
-A Python application that fetches real-time weather data from the U.S. National Weather Service (NWS) API and provides intelligent clothing recommendations based on temperature, wind speed, and forecast conditions.
+A monorepo containing a React frontend and FastAPI backend for weather-based clothing recommendations.
 
-## Features
+## Project Structure
 
-- 🌤️ **Real-time Weather Data**: Fetches current weather conditions from the official NWS API
-- 📊 **Comfort Scoring**: Calculates a comfort score based on temperature, wind speed, and forecast conditions
-- 👕 **Smart Recommendations**: Suggests appropriate clothing layers (base, mid, outer, shells) and accessories
-- 🔧 **Configurable**: Customize comfort temperature, forecast scoring, and clothing options
-- 🧪 **Tested**: Includes unit tests for scoring functions
+```
+project-root/
+├── frontend/          # React + Vite frontend
+├── backend/           # FastAPI backend
+├── shared/            # Shared schemas and documentation
+└── docker-compose.yml # Optional Docker setup
+```
 
-## Installation
+## Quick Start
 
-### Prerequisites
+### Backend Setup
 
-- Python 3.7 or higher
-- pip (Python package manager)
-
-### Setup
-
-1. Clone the repository:
+1. Navigate to backend directory:
 ```bash
-git clone <repository-url>
-cd weather-cloth-rec
+cd backend
 ```
 
 2. Install dependencies:
@@ -30,172 +26,126 @@ cd weather-cloth-rec
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file (optional, for NWS API user-agent):
+3. Copy `.env.example` to `.env` and configure:
 ```bash
-APP_NAME=WeatherLayers
-NWS_CONTACT=your-email@example.com
+cp .env.example .env
 ```
 
-**Note**: The `.env` file is optional but recommended. The NWS API prefers applications to identify themselves with proper contact information.
-
-## Usage
-
-### Command Line Interface
-
-Run the application with default coordinates (New York City area):
+4. Run the server:
 ```bash
-python app/run.py
+uvicorn app.web:app --reload --host 0.0.0.0 --port 8000
 ```
 
-Or specify custom latitude and longitude:
+### Frontend Setup
+
+1. Navigate to frontend directory:
 ```bash
-python app/run.py 34.05 -118.24  # Los Angeles
+cd frontend
 ```
 
-### Programmatic Usage
-
-```python
-from src.domain.models.weather import Weather
-from src.services.scoring.weather_scoring import score_weather
-from src.services.scoring.clothing_scoring import recommend_clothing
-
-# Create weather object (automatically fetches from NWS)
-weather = Weather(latitude=40.7128, longitude=-74.0060)
-
-# Calculate comfort score
-comfort_score = score_weather(weather)
-
-# Get clothing recommendations
-recommendations = recommend_clothing(comfort_score, weather.get_temperature())
-
-print(f"Comfort Score: {comfort_score:.1f}")
-print(f"Recommended Clothing: {recommendations}")
+2. Install dependencies:
+```bash
+npm install
 ```
 
-## Project Structure
-
+3. Copy `.env.example` to `.env` and set:
 ```
-weather-cloth-rec/
-├── app/
-│   └── run.py                 # CLI runner for testing
-├── src/
-│   ├── clients/
-│   │   └── nws_client.py      # NWS API client
-│   ├── config/
-│   │   └── common.py          # Configuration (comfort temp, clothing items, etc.)
-│   ├── domain/
-│   │   └── models/
-│   │       ├── weather.py     # Weather domain model
-│   │       └── user.py        # User domain model
-│   ├── services/
-│   │   └── scoring/
-│   │       ├── weather_scoring.py    # Weather → comfort score
-│   │       └── clothing_scoring.py   # Comfort score → clothing layers
-│   └── utils/
-│       └── parsing.py         # Wind speed parsing utilities
-├── tests/
-│   └── test_scoring.py        # Unit tests
-├── requirements.txt           # Python dependencies
-└── README.md                  # This file
+VITE_API_URL=http://127.0.0.1:8000
 ```
 
-## How It Works
+4. Run the development server:
+```bash
+npm run dev
+```
 
-### 1. Weather Data Fetching
+The frontend will be available at `http://localhost:5173`
 
-The `nws_client.py` module:
-- Maps latitude/longitude to NWS forecast grid points
-- Retrieves hourly forecast data
-- Parses temperature (°F), wind speed (mph), and forecast text
-- Handles API rate limiting and retries with exponential backoff
+## API Endpoints
 
-### 2. Comfort Scoring
+- `GET /health` - Health check
+- `GET /score` - Get clothing recommendations (query params: latitude, longitude, comfort_temperature)
+- `POST /score` - Get clothing recommendations (JSON body)
+- `GET /weather/current` - Get current weather conditions
+- `GET /recommendations` - Alias for `/score`
 
-The `weather_scoring.py` module calculates a comfort score:
+### Request Parameters
 
-- **Temperature Score**: Based on distance from ideal comfort temperature (default: 70°F)
-  - Peak score (+10) at comfort temperature
-  - Decreases by 0.5 points per °F away from comfort
-- **Wind Multiplier**: Reduces comfort score for windy conditions
-  - No penalty below 5 mph
-  - Decreasing multiplier above 5 mph (minimum 0.6)
-- **Forecast Score**: Adjusts based on weather conditions
-  - Sunny: +10
-  - Cloudy: +1 to +3
-  - Rain/Snow: -5 to -10
+- `latitude` (required): Latitude coordinate (-90 to 90)
+- `longitude` (required): Longitude coordinate (-180 to 180)
+- `comfort_temperature` (optional): Your personal comfort temperature in Fahrenheit (50-90°F). Defaults to 70°F if not provided.
 
-**Final Score** = `(Temperature Score × Wind Multiplier) + Forecast Score`
+### Response Format
 
-### 3. Clothing Recommendations
+The API returns:
+- `weather`: Current weather conditions (temperature, wind speed, forecast, location)
+- `comfort_score`: Calculated comfort score (higher = more comfortable)
+- `clothing_recommendations`: List of recommended clothing items with properties (name, category, windproof, rainproof, insulated)
+- `location`: Input coordinates
 
-The `clothing_scoring.py` module converts comfort scores to clothing:
+## Development Workflow
 
-- **Score ≥ 8**: Minimal layers (base layer only)
-- **Score 5-7**: Light layers (base + optional mid)
-- **Score 0-4**: Moderate layers (base + mid)
-- **Score -5 to -1**: Heavy layers (base + mid + outer)
-- **Score < -5**: Maximum layers (base + mid + outer + shell)
+1. Start the backend on port 8000
+2. Start the frontend on port 5173
+3. The frontend will proxy API requests to the backend (configured in `vite.config.js`)
 
-Accessories (hat, gloves, scarf) are automatically added based on temperature thresholds.
+## Docker (Optional)
 
-## Configuration
+To run with Docker Compose:
 
-Edit `src/config/common.py` to customize:
+```bash
+docker-compose up
+```
 
-- **`COMFORT_TEMPERATURE`**: Your ideal temperature (default: 70°F)
-- **`FORECAST_SCORES`**: Score adjustments for different weather conditions
-- **`CLOTHING_SCORES`**: Available clothing items with warmth scores
-- **`AUTO_ACCESSORIES`**: Temperature thresholds for automatic accessory recommendations
-- **`RECOMMENDATION_LIMITS`**: Maximum layers and accessories to recommend
+This will start:
+- FastAPI backend on port 8000
+- PostgreSQL database on port 5432
+
+## Features
+
+- 🌤️ **Real-time Weather Data**: Fetches current weather conditions from the official NWS API
+- 📊 **Comfort Scoring**: Calculates a comfort score based on temperature, wind speed, and forecast conditions
+- 👕 **Smart Recommendations**: Suggests appropriate clothing layers (base, mid, outer, shells) and accessories
+- 🌡️ **Temperature-Based Layering**: Calculates clothing layers based on temperature deviation from your comfort temperature
+- 💨 **Wind-Aware Recommendations**: Automatically adds layers and selects windproof outerwear when wind speed exceeds 15 mph
+- 🔧 **Configurable**: Customize comfort temperature, forecast scoring, and clothing options
+
+### Clothing Recommendation Algorithm
+
+The system uses a temperature deviation-based approach to determine the number of clothing layers needed:
+
+**Base Layer Calculation:**
+- Starts with 1 base layer
+- Adds 1 layer for every 20°F decrease below your comfort temperature
+- Formula: `layers = 1 + floor((comfort_temp - actual_temp) / 20)`
+
+**Wind Adjustment:**
+- Adds 1 layer for every 5 mph of wind speed
+- Formula: `wind_layers = floor(wind_speed / 5)`
+- Automatically selects windproof outer layers when wind > 15 mph
+
+**Example:**
+- Temperature: 43°F, Wind: 20 mph, Comfort Temp: 70°F
+- Temperature deviation: 70 - 43 = 27°F
+- Base layers: 1 + floor(27/20) = 2 layers
+- Wind adjustment: floor(20/5) = 4 layers
+- **Result: 6 layers** → tee + sweater + windproof jacket + additional layers
 
 ## Testing
 
-Run the test suite:
+### Backend Tests
 ```bash
-python tests/test_scoring.py
+cd backend
+python -m pytest tests/
 ```
 
-Tests cover:
-- Temperature scoring
-- Wind multiplier calculation
-- Weather scoring integration
+### Frontend Tests
+(Add your frontend test commands here)
 
-## API Reference
+## Deployment
 
-### `get_current_conditions(latitude, longitude)`
-
-Fetches current weather conditions for a location.
-
-**Returns:**
-```python
-{
-    "temp_f": float,           # Temperature in Fahrenheit
-    "wind_mph": float,         # Wind speed in mph
-    "short_forecast": str,     # Forecast description
-    "period_start": str,       # Period start time
-    "source": "weather.gov",
-    "location": str            # City, State
-}
-```
-
-### `score_weather(weather)`
-
-Calculates comfort score from weather object.
-
-**Returns:** `float` - Comfort score (typically -10 to +20)
-
-### `recommend_clothing(comfort_score, temperature)`
-
-Generates clothing recommendations.
-
-**Returns:** `list` - List of clothing item dictionaries
-
-## Notes
-
-- The NWS API is free and does not require an API key
-- The application respects NWS rate limits with automatic retries
-- Wind speed parsing handles various formats ("5 mph", "10-15 mph", "calm")
-- Default coordinates in `run.py` point to Pennsylvania (40.952583, -75.165222)
+- **Frontend**: Build static assets (`npm run build`) and serve via CDN or behind the API
+- **Backend**: Deploy FastAPI separately as an API service
+- **Secrets**: Keep secrets in environment variables, not in the repo
 
 ## License
 

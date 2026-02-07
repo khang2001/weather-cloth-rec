@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RecommendationResponse",
+  "type": "object",
+  "properties": {
+    "weather": {
+      "type": "object",
+      "properties": {
+        "temp_f": { "type": "number" },
+        "wind_mph": { "type": "number" },
+        "short_forecast": { "type": "string" },
+        "location": { "type": "string" },
+        "period_start": { "type": "string" },
+        "source": { "type": "string", "default": "weather.gov" }
+      },
+      "required": ["temp_f", "wind_mph", "short_forecast", "location", "period_start", "source"]
+    },
+    "comfort_score": { "type": "number" },
+    "clothing_recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "score": { "type": "integer" },
+          "category": { "type": "string" },
+          "rainproof": { "type": "boolean" },
+          "windproof": { "type": "boolean" },
+          "insulated": { "type": "boolean" }
+        },
+        "required": ["name", "score", "category"]
+      }
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      },
+      "required": ["latitude", "longitude"]
+    }
+  },
+  "required": ["weather", "comfort_score", "clothing_recommendations", "location"]
+}
+
+
+
+
+
+
+
+
