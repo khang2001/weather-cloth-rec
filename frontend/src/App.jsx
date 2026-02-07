@@ -19,7 +19,7 @@ import Settings from "./pages/Settings";
 import citiesData from "./data/us_cities.json";
 
 // Backend API base URL (configurable via environment variable)
-const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const BASE_URL = import.meta.env.VITE_API_URL || "https://weather-backend-uzto.onrender.com";
 
 /**
  * Make a POST request to the backend API with timeout handling.
