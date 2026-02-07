@@ -5,6 +5,7 @@ import tailwindcss from "@tailwindcss/vite"
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/weather-cloth-rec/', // required for GitHub Pages (project site)
   plugins: [react(), tsconfigPaths(), tailwindcss()],
   server: {
     port: 5173,
