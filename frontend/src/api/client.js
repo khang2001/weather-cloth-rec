@@ -3,39 +3,8 @@
  * Base URL is configured via VITE_API_URL environment variable.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://weather-backend-uzto.onrender.com';
-
-/**
- * Get clothing recommendations based on weather conditions.
- * 
- * @param {Object} params - Request parameters
- * @param {number} params.latitude - Latitude coordinate (-90 to 90)
- * @param {number} params.longitude - Longitude coordinate (-180 to 180)
- * @param {number} [params.comfort_temperature] - Optional personal comfort temperature (default: 70°F)
- * @returns {Promise<Object>} Recommendation response
- */
-export async function getScore({ latitude, longitude, comfort_temperature }) {
-  const url = new URL(`${API_BASE_URL}/score`);
-  url.searchParams.set('latitude', latitude);
-  url.searchParams.set('longitude', longitude);
-  if (comfort_temperature !== undefined) {
-    url.searchParams.set('comfort_temperature', comfort_temperature);
-  }
-
-  const response = await fetch(url.toString(), {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    throw new Error(error.detail || `HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
-}
+// All routes are served under the /v1 version prefix (D3).
+const API_BASE_URL = (import.meta.env.VITE_API_URL || 'https://weather-backend-uzto.onrender.com') + '/v1';
 
 /**
  * Get clothing recommendations via POST request.

@@ -42,12 +42,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
     try {
       // Call backend login API
-      const BASE_URL = import.meta.env.VITE_API_URL || 'https://weather-backend-uzto.onrender.com';
+      const BASE_URL = (import.meta.env.VITE_API_URL || 'https://weather-backend-uzto.onrender.com') + '/v1';
       const response = await fetch(`${BASE_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           email: email,
           password: password,

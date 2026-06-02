@@ -31,7 +31,8 @@ import {
 import citiesData from '../data/us_cities.json';
 import { getLocationIcon, LOCATION_ICON_OPTIONS } from '../components/CustomIcons';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://weather-backend-uzto.onrender.com';
+// All routes are served under the /v1 version prefix (D3).
+const BASE_URL = (import.meta.env.VITE_API_URL || 'https://weather-backend-uzto.onrender.com') + '/v1';
 
 // Clothing categories
 const CATEGORIES = [
@@ -60,6 +61,9 @@ export default function Settings() {
   
   // Form states
   const [comfortTemp, setComfortTemp] = useState('70');
+  // SC3 — asymmetric comfort: penalty per °F below / above comfort (0.5 = neutral).
+  const [coldPenalty, setColdPenalty] = useState('0.5');
+  const [heatPenalty, setHeatPenalty] = useState('0.5');
   const [locationName, setLocationName] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
@@ -110,6 +114,8 @@ export default function Settings() {
       
       // Populate form fields
       setComfortTemp(data.comfort_temperature?.toString() || '70');
+      setColdPenalty(data.cold_penalty_per_degree?.toString() ?? '0.5');
+      setHeatPenalty(data.heat_penalty_per_degree?.toString() ?? '0.5');
       setLocationName(data.location_name || '');
       setLatitude(data.saved_latitude?.toString() || '');
       setLongitude(data.saved_longitude?.toString() || '');
@@ -135,6 +141,8 @@ export default function Settings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           comfort_temperature: parseFloat(comfortTemp),
+          cold_penalty_per_degree: parseFloat(coldPenalty),
+          heat_penalty_per_degree: parseFloat(heatPenalty),
           location_name: locationName || null,
           saved_latitude: latitude ? parseFloat(latitude) : null,
           saved_longitude: longitude ? parseFloat(longitude) : null,
@@ -399,9 +407,41 @@ export default function Settings() {
           <p className="text-small text-default-500 mt-2">
             Your ideal temperature for feeling comfortable
           </p>
+
+          <Divider className="my-4" />
+
+          {/* SC3 — asymmetric comfort tolerances */}
+          <p className="text-small font-medium mb-2">
+            Sensitivity (penalty per °F away from comfort)
+          </p>
+          <div className="flex gap-4">
+            <Input
+              type="number"
+              label="Cold sensitivity"
+              value={coldPenalty}
+              onValueChange={setColdPenalty}
+              min="0"
+              max="2"
+              step="0.05"
+              description="When it's colder than comfort"
+            />
+            <Input
+              type="number"
+              label="Heat sensitivity"
+              value={heatPenalty}
+              onValueChange={setHeatPenalty}
+              min="0"
+              max="2"
+              step="0.05"
+              description="When it's warmer than comfort"
+            />
+          </div>
+          <p className="text-small text-default-500 mt-2">
+            0.5 is balanced. Raise one side if cold or heat bothers you more.
+          </p>
         </CardBody>
       </Card>
-      
+
       {/* Location Settings */}
       <Card className="mb-6">
         <CardHeader className="flex justify-between items-center">

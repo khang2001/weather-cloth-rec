@@ -18,8 +18,9 @@ import WeatherRecommendations from "./components/WeatherRecommendations";
 import Settings from "./pages/Settings";
 import citiesData from "./data/us_cities.json";
 
-// Backend API base URL (configurable via environment variable)
-const BASE_URL = import.meta.env.VITE_API_URL || "https://weather-backend-uzto.onrender.com";
+// Backend API base URL (configurable via environment variable).
+// All routes are served under the /v1 version prefix (D3).
+const BASE_URL = (import.meta.env.VITE_API_URL || "https://weather-backend-uzto.onrender.com") + "/v1";
 
 /**
  * Make a POST request to the backend API with timeout handling.
@@ -97,6 +98,10 @@ function App() {
 
   // User saved locations
   const [savedLocations, setSavedLocations] = useState([]);
+
+  // SC3 — logged-in user's asymmetric-comfort tolerances (penalty per °F).
+  // null when not logged in → backend falls back to symmetric scoring.
+  const [userTolerances, setUserTolerances] = useState(null);
   
   // Current selected city display
   const [currentCityDisplay, setCurrentCityDisplay] = useState(null);
@@ -121,6 +126,8 @@ function App() {
         latitude: Number(lat),
         longitude: Number(lon),
         comfort_temperature: comfortTemp ? Number(comfortTemp) : undefined,
+        // SC3 — include per-user tolerances when logged in (omitted → symmetric).
+        ...(userTolerances || {}),
       };
       
       console.log("Sending request with comfort_temperature:", comfortTemp);
@@ -147,7 +154,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [comfortTemp]);
+  }, [comfortTemp, userTolerances]);
 
   /**
    * Handle form submission.
@@ -329,10 +336,19 @@ function App() {
    */
   const fetchUserLocations = async (userId) => {
     try {
-      const response = await fetch(`${BASE_URL}/settings/${userId}`);
+      const response = await fetch(`${BASE_URL}/settings/${userId}`, {
+        credentials: 'include',
+      });
       if (response.ok) {
         const data = await response.json();
         setSavedLocations(data.saved_locations || []);
+        // SC3 — remember the user's tolerances so /score reflects them.
+        if (data.cold_penalty_per_degree != null && data.heat_penalty_per_degree != null) {
+          setUserTolerances({
+            cold_penalty_per_degree: data.cold_penalty_per_degree,
+            heat_penalty_per_degree: data.heat_penalty_per_degree,
+          });
+        }
       }
     } catch (err) {
       console.error('Failed to fetch saved locations:', err);
