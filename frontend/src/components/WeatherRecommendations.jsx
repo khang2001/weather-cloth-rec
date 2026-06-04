@@ -64,34 +64,23 @@ function WeatherRecommendations({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Current Location Section */}
+      {/* GPS refresh button — only shown when a GPS location is active */}
       {currentLocation && (
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <span className="text-xl">📍</span>
-              Current Location
-            </h2>
-            <p className="text-small text-default-500">
-              Latitude: {currentLocation.latitude.toFixed(6)}, Longitude:{" "}
-              {currentLocation.longitude.toFixed(6)}
-            </p>
-          </div>
+        <div className="flex justify-end">
           <Button
             color="primary"
-            variant="flat"
+            variant="light"
+            size="sm"
             onPress={getCurrentLocation}
             isLoading={locationLoading}
             startContent={!locationLoading && "🔄"}
-            className="w-fit"
           >
-            {locationLoading ? "Getting Location..." : "Refresh Location"}
+            {locationLoading ? "Refreshing..." : "Refresh GPS Location"}
           </Button>
-          <Divider />
         </div>
       )}
 
-      {/* Location Loading State */}
+      {/* Location Loading State — initial load when no location set yet */}
       {locationLoading && !currentLocation && (
         <Alert
           color="primary"
@@ -108,7 +97,7 @@ function WeatherRecommendations({
           color="danger"
           variant="flat"
           title="Location Error"
-          action={
+          endContent={
             <Button
               size="sm"
               color="danger"

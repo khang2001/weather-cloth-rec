@@ -105,7 +105,9 @@ export default function Settings() {
   // Fetch user settings from API
   const fetchSettings = async (userId) => {
     try {
-      const response = await fetch(`${BASE_URL}/settings/${userId}`);
+      const response = await fetch(`${BASE_URL}/settings/${userId}`, {
+        credentials: 'include',
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch settings');
       }
@@ -139,6 +141,7 @@ export default function Settings() {
       const response = await fetch(`${BASE_URL}/settings/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           comfort_temperature: parseFloat(comfortTemp),
           cold_penalty_per_degree: parseFloat(coldPenalty),
@@ -177,6 +180,7 @@ export default function Settings() {
       const response = await fetch(`${BASE_URL}/settings/${user.id}/clothing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(newItem),
       });
       
@@ -211,6 +215,7 @@ export default function Settings() {
     try {
       const response = await fetch(`${BASE_URL}/settings/${user.id}/clothing/${index}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -247,6 +252,7 @@ export default function Settings() {
       const response = await fetch(url, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(locationData),
       });
       
@@ -291,6 +297,7 @@ export default function Settings() {
     try {
       const response = await fetch(`${BASE_URL}/settings/${user.id}/locations/${index}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
       
       if (!response.ok) {

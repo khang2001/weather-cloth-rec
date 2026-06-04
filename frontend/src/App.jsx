@@ -27,11 +27,13 @@ const BASE_URL = (import.meta.env.VITE_API_URL || "https://weather-backend-uzto.
  * 
  * @param {string} path - API endpoint path (e.g., "/score")
  * @param {object} body - Request body to send as JSON
- * @param {number} timeoutMs - Request timeout in milliseconds (default: 10000)
+ * @param {number} timeoutMs - Request timeout in milliseconds (default: 60000).
+ *   The backend runs on Render's free tier and can take 30-60s to cold-start
+ *   after inactivity, so the timeout must be generous enough to wait it out.
  * @returns {Promise<object>} Parsed JSON response from the API
  * @throws {Error} If request fails, times out, or returns error status
  */
-async function apiPost(path, body, timeoutMs = 10000) {
+async function apiPost(path, body, timeoutMs = 60000) {
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -63,7 +65,9 @@ async function apiPost(path, body, timeoutMs = 10000) {
     return data;
   } catch (err) {
     if (err.name === "AbortError") {
-      throw err;
+      throw new Error(
+        "The request timed out. The backend may be waking up from sleep — please try again in a moment."
+      );
     }
     if (err.message.includes("Failed to fetch") || err.message.includes("NetworkError")) {
       throw new Error(`Cannot connect to backend server at ${BASE_URL}. Make sure the backend is running.`);
@@ -167,6 +171,8 @@ function App() {
     e.preventDefault();
     if (latitude && longitude) {
       await fetchWeatherRecommendations(latitude, longitude);
+    } else {
+      setError("Please enter both latitude and longitude, or select a city.");
     }
   }
 
